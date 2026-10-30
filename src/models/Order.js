@@ -53,9 +53,14 @@ const pedidoSchema = new mongoose.Schema(
       cidade: { type: String, required: true },
       estado: { type: String, required: true },
     },
+    // Só guardamos a forma escolhida; dados de cartão nunca chegam ao servidor.
+    pagamento: {
+      metodo: { type: String, enum: ["pix", "cartao", "boleto"], default: "pix" },
+      parcelas: { type: Number, min: 1, max: 12, default: 1 },
+    },
     status: {
       type: String,
-      enum: ["Recebido"],
+      enum: ["Recebido", "Aguardando pagamento"],
       default: "Recebido",
     },
   },

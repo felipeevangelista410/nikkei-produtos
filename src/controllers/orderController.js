@@ -44,14 +44,32 @@ function dadosEntrega(dados = {}) {
   return entrega;
 }
 
+const METODOS_PAGAMENTO = ["pix", "cartao", "boleto"];
+const MAX_PARCELAS = 3; // mantenha igual ao MAX_PARCELAS do site (CheckoutPagamento.jsx)
+
+function dadosPagamento(dados = {}) {
+  if (!METODOS_PAGAMENTO.includes(dados.metodo)) return null;
+  if (dados.metodo !== "cartao") return { metodo: dados.metodo, parcelas: 1 };
+  const parcelas = dados.parcelas === undefined ? 1 : dados.parcelas;
+  if (!Number.isInteger(parcelas) || parcelas < 1 || parcelas > MAX_PARCELAS) return null;
+  return { metodo: "cartao", parcelas };
+}
+
 async function finalizarCompra(req, res) {
-  const { itens, entrega: entregaInformada } = req.body || {};
+  const { itens, entrega: entregaInformada, pagamento: pagamentoInformado } = req.body || {};
   const entrega = dadosEntrega(entregaInformada);
+  const pagamento = dadosPagamento(pagamentoInformado);
 
   if (!entrega) {
     return res.status(400).json({
       sucesso: false,
       mensagem: "Informe endereço, número, bairro, cidade, estado e CEP válido para entrega.",
+    });
+  }
+  if (!pagamento) {
+    return res.status(400).json({
+      sucesso: false,
+      mensagem: "Escolha uma forma de pagamento válida (Pix, cartão ou boleto).",
     });
   }
   if (
@@ -133,6 +151,9 @@ async function finalizarCompra(req, res) {
             itens: itensPedido,
             total: totalCentavos / 100,
             entrega,
+            pagamento,
+            // Cartão aprova na hora; Pix e boleto ficam aguardando a confirmação.
+            status: pagamento.metodo === "cartao" ? "Recebido" : "Aguardando pagamento",
           },
         ],
         { session: sessao }
