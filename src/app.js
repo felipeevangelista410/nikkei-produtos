@@ -18,8 +18,10 @@ app.get("/", (req, res) => {
 // Rotas
 const produtoRoutes = require("./routes/productRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const iaRoutes = require("./routes/iaRoutes");
 app.use("/api/produtos", produtoRoutes);
 app.use("/api/compras", orderRoutes);
+app.use("/api/ia", iaRoutes);
 
 // Tratamento de rota não encontrada (404)
 app.use((req, res) => {
